@@ -4,80 +4,163 @@
     <meta charset="UTF-8">
     <title>Колесо фортуны</title>
     <style>
-        body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #f5f5fa; }
-        #wheel { width: 300px; height: 300px; }
-        #spin { margin-top: 30px; padding: 10px 30px; font-size: 18px; background: #32b67a; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
-        #pointer { position: absolute; top: 90px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; }
-        .container { position: relative; }
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #f5f5fa 60%, #e0e7ff 100%);
+            margin: 0;
+        }
+        .container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        #wheel {
+            width: 340px;
+            height: 340px;
+            box-shadow: 0 6px 32px 0 rgba(60,60,120,0.18), 0 1.5px 8px 0 rgba(0,0,0,0.10);
+            border-radius: 50%;
+            background: radial-gradient(circle at 60% 40%, #fff 60%, #e0e7ff 100%);
+        }
+        #pointer {
+            position: absolute;
+            top: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 54px;
+            height: 54px;
+            z-index: 2;
+        }
+        #spin {
+            margin-top: 10px;
+            padding: 14px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            background: linear-gradient(90deg, #36a2eb 0%, #32b67a 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px 0 rgba(60,60,120,0.10);
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+        #spin:hover {
+            background: linear-gradient(90deg, #32b67a 0%, #36a2eb 100%);
+            transform: scale(1.06);
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <canvas id="wheel" width="300" height="300"></canvas>
-        <img id="pointer" src="[https://cdn-icons-png.flaticon.com/512/32/32339.png"](https://cdn-icons-png.flaticon.com/512/32/32339.png") alt="pointer" />
+        <canvas id="wheel" width="340" height="340"></canvas>
+        <!-- SVG pointer -->
+        <svg id="pointer" viewBox="0 0 54 54">
+            <polygon points="27,0 47,40 27,32 7,40" fill="#ff595e" stroke="#fff" stroke-width="3"/>
+            <circle cx="27" cy="44" r="6" fill="#fff" stroke="#ff595e" stroke-width="3"/>
+        </svg>
     </div>
-    <button id="spin">Крутить колесо</button>
+    <button id="spin">КРУТИТЬ КОЛЕСО</button>
     <script>
         const wheel = document.getElementById('wheel');
         const ctx = wheel.getContext('2d');
-        const segments = ['Приз 1', 'Приз 2', 'Приз 3', 'Приз 4', 'Приз 5', 'Приз 6'];
-        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+        const segments = ['iPhone', 'AirPods', 'Промокод', 'Пусто', 'Скидка', 'Пауэрбанк', 'Пусто', 'Чехол'];
+        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#43e97b', '#f441a5'];
         let angle = 0;
         let spinning = false;
+        let targetAngle = 0;
+        let animationFrame;
 
         function drawWheel() {
             const centerX = wheel.width / 2;
             const centerY = wheel.height / 2;
-            const radius = wheel.width / 2 - 10;
+            const radius = wheel.width / 2 - 16;
             const segAngle = 2 * Math.PI / segments.length;
 
             ctx.clearRect(0, 0, wheel.width, wheel.height);
 
+            // Draw shadow
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + 10, radius, 0, 2 * Math.PI);
+            ctx.shadowColor = '#8888ff';
+            ctx.shadowBlur = 16;
+            ctx.fillStyle = '#e0e7ff';
+            ctx.fill();
+            ctx.restore();
+
             for (let i = 0; i < segments.length; i++) {
+                ctx.save();
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, angle + i * segAngle, angle + (i + 1) * segAngle);
                 ctx.closePath();
-                ctx.fillStyle = colors[i % colors.length];
+                // Gradient for segment
+                let grad = ctx.createLinearGradient(centerX, centerY, centerX + Math.cos(angle + (i + 0.5) * segAngle) * radius, centerY + Math.sin(angle + (i + 0.5) * segAngle) * radius);
+                grad.addColorStop(0, colors[i % colors.length]);
+                grad.addColorStop(1, '#fff');
+                ctx.fillStyle = grad;
                 ctx.fill();
-                ctx.save();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                // Text
                 ctx.translate(centerX, centerY);
                 ctx.rotate(angle + (i + 0.5) * segAngle);
                 ctx.textAlign = "right";
-                ctx.fillStyle = "#fff";
-                ctx.font = "18px Arial";
-                ctx.fillText(segments[i], radius - 10, 8);
+                ctx.fillStyle = "#333";
+                ctx.font = "bold 20px Arial";
+                ctx.shadowColor = '#fff';
+                ctx.shadowBlur = 4;
+                ctx.fillText(segments[i], radius - 20, 8);
                 ctx.restore();
             }
+            // Draw center circle
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 38, 0, 2 * Math.PI);
+            ctx.fillStyle = '#fff';
+            ctx.shadowColor = '#aaa';
+            ctx.shadowBlur = 8;
+            ctx.fill();
+            ctx.restore();
         }
 
         function spinWheel() {
             if (spinning) return;
             spinning = true;
-            let spinAngle = Math.random() * 2 * Math.PI + 10 * 2 * Math.PI; // 10 оборотов + случайный угол
-            let start = null;
-            let duration = 3000;
+            // Определяем случайный сектор и угол
+            const prizeIdx = Math.floor(Math.random() * segments.length);
+            // Сектор должен оказаться под pointer (сверху)
+            const segAngle = 2 * Math.PI / segments.length;
+            // 3 оборота + нужный сектор
+            const spins = 5 + Math.random() * 1;
+            targetAngle = (2 * Math.PI * spins) - (prizeIdx * segAngle + segAngle / 2);
+            const duration = 3500; // мс
+            const start = performance.now();
+            const startAngle = angle;
 
-            function animate(timestamp) {
-                if (!start) start = timestamp;
-                let progress = (timestamp - start) / duration;
-                if (progress > 1) progress = 1;
-                angle += (spinAngle - angle) * 0.1;
+            function animate(now) {
+                const elapsed = now - start;
+                const t = Math.min(elapsed / duration, 1);
+                // easeOutCubic
+                const ease = 1 - Math.pow(1 - t, 3);
+                angle = startAngle + (targetAngle - startAngle) * ease;
                 drawWheel();
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
+                if (t < 1) {
+                    animationFrame = requestAnimationFrame(animate);
                 } else {
-                    angle = spinAngle % (2 * Math.PI);
-                    drawWheel();
                     spinning = false;
+                    angle = angle % (2 * Math.PI);
+                    drawWheel();
+                    // Показать результат
                     setTimeout(() => {
-                        // Определяем выигрышный сектор
-                        let seg = Math.floor(segments.length - (angle / (2 * Math.PI)) * segments.length) % segments.length;
-                        alert('Вы выиграли: ' + segments[seg]);
-                    }, 500);
+                        alert('Ваш приз: ' + segments[prizeIdx]);
+                    }, 400);
                 }
             }
-            requestAnimationFrame(animate);
+            animationFrame = requestAnimationFrame(animate);
         }
 
         drawWheel();
