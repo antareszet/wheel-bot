@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Колесо фортуны</title>
+    <style>
+        body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #f5f5fa; }
+        #wheel { width: 300px; height: 300px; }
+        #spin { margin-top: 30px; padding: 10px 30px; font-size: 18px; background: #32b67a; color: #fff; border: none; border-radius: 8px; cursor: pointer; }
+        #pointer { position: absolute; top: 90px; left: 50%; transform: translateX(-50%); width: 40px; height: 40px; }
+        .container { position: relative; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <canvas id="wheel" width="300" height="300"></canvas>
+        <img id="pointer" src="[https://cdn-icons-png.flaticon.com/512/32/32339.png"](https://cdn-icons-png.flaticon.com/512/32/32339.png") alt="pointer" />
+    </div>
+    <button id="spin">Крутить колесо</button>
+    <script>
+        const wheel = document.getElementById('wheel');
+        const ctx = wheel.getContext('2d');
+        const segments = ['Приз 1', 'Приз 2', 'Приз 3', 'Приз 4', 'Приз 5', 'Приз 6'];
+        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'];
+        let angle = 0;
+        let spinning = false;
+
+        function drawWheel() {
+            const centerX = wheel.width / 2;
+            const centerY = wheel.height / 2;
+            const radius = wheel.width / 2 - 10;
+            const segAngle = 2 * Math.PI / segments.length;
+
+            ctx.clearRect(0, 0, wheel.width, wheel.height);
+
+            for (let i = 0; i < segments.length; i++) {
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, angle + i * segAngle, angle + (i + 1) * segAngle);
+                ctx.closePath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.fill();
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(angle + (i + 0.5) * segAngle);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#fff";
+                ctx.font = "18px Arial";
+                ctx.fillText(segments[i], radius - 10, 8);
+                ctx.restore();
+            }
+        }
+
+        function spinWheel() {
+            if (spinning) return;
+            spinning = true;
+            let spinAngle = Math.random() * 2 * Math.PI + 10 * 2 * Math.PI; // 10 оборотов + случайный угол
+            let start = null;
+            let duration = 3000;
+
+            function animate(timestamp) {
+                if (!start) start = timestamp;
+                let progress = (timestamp - start) / duration;
+                if (progress > 1) progress = 1;
+                angle += (spinAngle - angle) * 0.1;
+                drawWheel();
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    angle = spinAngle % (2 * Math.PI);
+                    drawWheel();
+                    spinning = false;
+                    setTimeout(() => {
+                        // Определяем выигрышный сектор
+                        let seg = Math.floor(segments.length - (angle / (2 * Math.PI)) * segments.length) % segments.length;
+                        alert('Вы выиграли: ' + segments[seg]);
+                    }, 500);
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        drawWheel();
+        document.getElementById('spin').onclick = spinWheel;
+    </script>
+</body>
+</html>
