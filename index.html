@@ -18,30 +18,30 @@
             margin-bottom: 20px;
         }
         #wheel {
-            width: 340px;
-            height: 340px;
+            width: 500px;
+            height: 500px;
             box-shadow: 0 6px 32px 0 rgba(60,60,120,0.18), 0 1.5px 8px 0 rgba(0,0,0,0.10);
             border-radius: 50%;
             background: radial-gradient(circle at 60% 40%, #fff 60%, #e0e7ff 100%);
         }
         #pointer {
             position: absolute;
-            top: -28px;
+            top: -46px;
             left: 50%;
             transform: translateX(-50%);
-            width: 54px;
-            height: 54px;
+            width: 85px;
+            height: 85px;
             z-index: 2;
         }
         #spin {
             margin-top: 10px;
-            padding: 14px 40px;
-            font-size: 20px;
+            padding: 22px 60px;
+            font-size: 24px;
             font-weight: bold;
             background: linear-gradient(90deg, #36a2eb 0%, #32b67a 100%);
             color: #fff;
             border: none;
-            border-radius: 12px;
+            border-radius: 16px;
             box-shadow: 0 2px 12px 0 rgba(60,60,120,0.10);
             cursor: pointer;
             transition: background 0.3s, transform 0.2s;
@@ -54,18 +54,26 @@
 </head>
 <body>
     <div class="container">
-        <canvas id="wheel" width="340" height="340"></canvas>
+        <canvas id="wheel" width="500" height="500"></canvas>
         <!-- SVG pointer -->
-        <svg id="pointer" viewBox="0 0 54 54">
-            <polygon points="27,0 47,40 27,32 7,40" fill="#ff595e" stroke="#fff" stroke-width="3"/>
-            <circle cx="27" cy="44" r="6" fill="#fff" stroke="#ff595e" stroke-width="3"/>
+        <svg id="pointer" viewBox="0 0 85 85">
+            <polygon points="42.5,0 75,65 42.5,53 10,65" fill="#ff595e" stroke="#fff" stroke-width="5"/>
+            <circle cx="42.5" cy="72" r="10" fill="#fff" stroke="#ff595e" stroke-width="5"/>
         </svg>
     </div>
     <button id="spin">КРУТИТЬ КОЛЕСО</button>
     <script>
         const wheel = document.getElementById('wheel');
         const ctx = wheel.getContext('2d');
-        const segments = ['iPhone', 'AirPods', 'Промокод', 'Пусто', 'Скидка', 'Пауэрбанк', 'Пусто', 'Чехол'];
+        const segments = [
+            "Промокод 10%",
+            "Промокод 15%",
+            "Подарок\nк заказу",
+            "500 бонусов",
+            "Удвоение\nбонусов",
+            "Промокод 5%",
+            "Сюрприз от магазина"
+        ];
         const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#43e97b', '#f441a5'];
         let angle = 0;
         let spinning = false;
@@ -75,7 +83,7 @@
         function drawWheel() {
             const centerX = wheel.width / 2;
             const centerY = wheel.height / 2;
-            const radius = wheel.width / 2 - 16;
+            const radius = wheel.width / 2 - 28;
             const segAngle = 2 * Math.PI / segments.length;
 
             ctx.clearRect(0, 0, wheel.width, wheel.height);
@@ -83,9 +91,9 @@
             // Draw shadow
             ctx.save();
             ctx.beginPath();
-            ctx.arc(centerX, centerY + 10, radius, 0, 2 * Math.PI);
+            ctx.arc(centerX, centerY + 18, radius, 0, 2 * Math.PI);
             ctx.shadowColor = '#8888ff';
-            ctx.shadowBlur = 16;
+            ctx.shadowBlur = 28;
             ctx.fillStyle = '#e0e7ff';
             ctx.fill();
             ctx.restore();
@@ -103,26 +111,73 @@
                 ctx.fillStyle = grad;
                 ctx.fill();
                 ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 4;
+                ctx.lineWidth = 6;
                 ctx.stroke();
                 // Text
                 ctx.translate(centerX, centerY);
                 ctx.rotate(angle + (i + 0.5) * segAngle);
                 ctx.textAlign = "right";
                 ctx.fillStyle = "#333";
-                ctx.font = "bold 20px Arial";
+                let text = segments[i];
+                let textRadius = radius - 36;
+                let baseFontSize = 20;
+                let fontSize = baseFontSize;
+                // --- Обработка ручного переноса ---
+                let lines = text.split('\n');
+                // Если всё равно длинно, делаем автоперенос
+                function wrapText(text, maxWidth, fontSize) {
+                    ctx.font = `bold ${fontSize}px Arial`;
+                    let words = text.split(' ');
+                    let line = '';
+                    let result = [];
+                    for (let w of words) {
+                        let testLine = line ? line + ' ' + w : w;
+                        let metrics = ctx.measureText(testLine);
+                        if (metrics.width > maxWidth && line) {
+                            result.push(line);
+                            line = w;
+                        } else {
+                            line = testLine;
+                        }
+                    }
+                    if (line) result.push(line);
+                    return result;
+                }
+                // Если нет ручного переноса, но текст длинный, разбиваем на 2 строки по пробелу
+                if (lines.length === 1 && text.length > 13) {
+                    let idx = text.lastIndexOf(' ', Math.floor(text.length/2));
+                    if (idx > 0) {
+                        lines = [text.slice(0, idx), text.slice(idx+1)];
+                    }
+                }
+                if (lines.length === 1) {
+                    lines = wrapText(text, radius * 0.9, fontSize);
+                }
+                if (lines.length > 2) {
+                    fontSize = 14;
+                    lines = wrapText(text, radius * 0.9, fontSize);
+                }
+                if (lines.length > 3) {
+                    lines = lines.slice(0, 3);
+                    lines[2] = lines[2].replace(/(.{3,})$/, '$1...');
+                }
+                ctx.font = `bold ${fontSize}px Arial`;
                 ctx.shadowColor = '#fff';
                 ctx.shadowBlur = 4;
-                ctx.fillText(segments[i], radius - 20, 8);
+                let y = 12 - (lines.length-1)*fontSize/2;
+                for (let l of lines) {
+                    ctx.fillText(l, textRadius, y);
+                    y += fontSize;
+                }
                 ctx.restore();
             }
             // Draw center circle
             ctx.save();
             ctx.beginPath();
-            ctx.arc(centerX, centerY, 38, 0, 2 * Math.PI);
+            ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
             ctx.fillStyle = '#fff';
             ctx.shadowColor = '#aaa';
-            ctx.shadowBlur = 8;
+            ctx.shadowBlur = 10;
             ctx.fill();
             ctx.restore();
         }
@@ -130,21 +185,17 @@
         function spinWheel() {
             if (spinning) return;
             spinning = true;
-            // Определяем случайный сектор и угол
             const prizeIdx = Math.floor(Math.random() * segments.length);
-            // Сектор должен оказаться под pointer (сверху)
             const segAngle = 2 * Math.PI / segments.length;
-            // 3 оборота + нужный сектор
             const spins = 5 + Math.random() * 1;
             targetAngle = (2 * Math.PI * spins) - (prizeIdx * segAngle + segAngle / 2);
-            const duration = 3500; // мс
+            const duration = 3500;
             const start = performance.now();
             const startAngle = angle;
 
             function animate(now) {
                 const elapsed = now - start;
                 const t = Math.min(elapsed / duration, 1);
-                // easeOutCubic
                 const ease = 1 - Math.pow(1 - t, 3);
                 angle = startAngle + (targetAngle - startAngle) * ease;
                 drawWheel();
@@ -154,7 +205,6 @@
                     spinning = false;
                     angle = angle % (2 * Math.PI);
                     drawWheel();
-                    // Показать результат
                     setTimeout(() => {
                         alert('Ваш приз: ' + segments[prizeIdx]);
                     }, 400);
