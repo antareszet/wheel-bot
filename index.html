@@ -55,7 +55,6 @@
 <body>
     <div class="container">
         <canvas id="wheel" width="500" height="500"></canvas>
-        <!-- SVG pointer -->
         <svg id="pointer" viewBox="0 0 85 85">
             <polygon points="42.5,0 75,65 42.5,53 10,65" fill="#ff595e" stroke="#fff" stroke-width="5"/>
             <circle cx="42.5" cy="72" r="10" fill="#fff" stroke="#ff595e" stroke-width="5"/>
@@ -66,13 +65,13 @@
         const wheel = document.getElementById('wheel');
         const ctx = wheel.getContext('2d');
         const segments = [
-            "Промокод 10%",
-            "Промокод 15%",
-            "Подарок\nк заказу",
-            "500 бонусов",
-            "Удвоение\nбонусов",
-            "Промокод 5%",
-            "Сюрприз от магазина"
+            { text: "Промокод 10%", value: "Промокод 10%" },
+            { text: "Промокод 15%", value: "Промокод 15%" },
+            { text: "Подарок\nк заказу", value: "Подарок к заказу" },
+            { text: "500 бонусов", value: "500 бонусов" },
+            { text: "Удвоение\nбонусов", value: "Удвоение бонусов" },
+            { text: "Промокод 5%", value: "Промокод 5%" },
+            { text: "Сюрприз от магазина", value: "Сюрприз от магазина" }
         ];
         const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#43e97b', '#f441a5'];
         let angle = 0;
@@ -118,13 +117,12 @@
                 ctx.rotate(angle + (i + 0.5) * segAngle);
                 ctx.textAlign = "right";
                 ctx.fillStyle = "#333";
-                let text = segments[i];
+                let text = segments[i].text;
                 let textRadius = radius - 36;
                 let baseFontSize = 20;
                 let fontSize = baseFontSize;
                 // --- Обработка ручного переноса ---
                 let lines = text.split('\n');
-                // Если всё равно длинно, делаем автоперенос
                 function wrapText(text, maxWidth, fontSize) {
                     ctx.font = `bold ${fontSize}px Arial`;
                     let words = text.split(' ');
@@ -143,7 +141,6 @@
                     if (line) result.push(line);
                     return result;
                 }
-                // Если нет ручного переноса, но текст длинный, разбиваем на 2 строки по пробелу
                 if (lines.length === 1 && text.length > 13) {
                     let idx = text.lastIndexOf(' ', Math.floor(text.length/2));
                     if (idx > 0) {
@@ -206,8 +203,14 @@
                     angle = angle % (2 * Math.PI);
                     drawWheel();
                     setTimeout(() => {
-                        alert('Ваш приз: ' + segments[prizeIdx]);
-                        window.Telegram.WebApp.sendData(segments[prizeIdx]); // Для отправки данных в бот
+                        const prize = segments[prizeIdx].value;
+                        alert('Ваш приз: ' + prize);
+                        // Отправка данных в Telegram WebApp
+                        if (window.Telegram && window.Telegram.WebApp) {
+                            Telegram.WebApp.sendData(JSON.stringify({ prize: prize }));
+                        } else {
+                            alert('Мини-приложение должно быть открыто через Telegram!');
+                        }
                     }, 400);
                 }
             }
