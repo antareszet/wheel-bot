@@ -193,17 +193,6 @@
             const start = performance.now();
             const startAngle = angle;
 
-        function spinWheel() {
-            if (spinning) return;
-            spinning = true;
-            const prizeIdx = Math.floor(Math.random() * segments.length);
-            const segAngle = 2 * Math.PI / segments.length;
-            const spins = 5 + Math.random() * 1;
-            targetAngle = (2 * Math.PI * spins) - (prizeIdx * segAngle + segAngle / 2);
-            const duration = 3500;
-            const start = performance.now();
-            const startAngle = angle;
-
             function animate(now) {
                 const elapsed = now - start;
                 const t = Math.min(elapsed / duration, 1);
@@ -217,7 +206,7 @@
                     angle = angle % (2 * Math.PI);
                     drawWheel();
                     setTimeout(() => {
-                        alert('Ваш приз: ' + segments[prizeIdx]); // Для тестирования
+                        alert('Ваш приз: ' + segments[prizeIdx]);
                         window.Telegram.WebApp.sendData(segments[prizeIdx]); // Для отправки данных в бот
                     }, 400);
                 }
