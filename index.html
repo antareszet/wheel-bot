@@ -206,7 +206,7 @@
                     angle = angle % (2 * Math.PI);
                     drawWheel();
                     setTimeout(() => {
-                        alert('Ваш приз: ' + segments[prizeIdx]);
+                        window.Telegram.WebApp.sendData(segments[prizeIdx]);
                     }, 400);
                 }
             }
