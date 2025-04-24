@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <meta charset="UTF-8">
     <title>Колесо фортуны</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -27,9 +28,10 @@
         }
         #pointer {
             position: absolute;
-            top: -46px;
+            top: auto;
+            bottom: -30px;
             left: 50%;
-            transform: translateX(-50%);
+            transform: translateX(-50%) rotate(0deg); /* Стрелка теперь внизу и указывает вверх */
             width: 85px;
             height: 85px;
             z-index: 2;
@@ -56,6 +58,7 @@
 <body>
     <div class="container">
         <canvas id="wheel" width="500" height="500"></canvas>
+        <!-- SVG pointer -->
         <svg id="pointer" viewBox="0 0 85 85">
             <polygon points="42.5,0 75,65 42.5,53 10,65" fill="#ff595e" stroke="#fff" stroke-width="5"/>
             <circle cx="42.5" cy="72" r="10" fill="#fff" stroke="#ff595e" stroke-width="5"/>
@@ -63,69 +66,69 @@
     </div>
     <button id="spin">КРУТИТЬ КОЛЕСО</button>
     <script>
+        // Сектора колеса
+        const sectors = [
+            "Скидка 7%",
+            "Скидка 10%",
+            "Скидка 15%",
+            "Скидка 20%",
+            "бонусы 100",
+            "Бонусы 200",
+            "Бонусы 300",
+            "Скидка на год 10%",
+            "Подарочный бокс 10000 рублей",
+            "Подарочный бокс всей палитры Modern Gel"
+        ];
+        const colors = [
+            '#36a2eb', '#32b67a', '#ff595e', '#ffca3a', '#8ac926',
+            '#1982c4', '#6a4c93', '#ff924c', '#b388ff', '#00bfae'
+        ];
         const wheel = document.getElementById('wheel');
         const ctx = wheel.getContext('2d');
-        const segments = [
-            { text: "Промокод 10%", value: "Промокод 10%" },
-            { text: "Промокод 15%", value: "Промокод 15%" },
-            { text: "Подарок\nк заказу", value: "Подарок к заказу" },
-            { text: "500 бонусов", value: "500 бонусов" },
-            { text: "Удвоение\nбонусов", value: "Удвоение бонусов" },
-            { text: "Промокод 5%", value: "Промокод 5%" },
-            { text: "Сюрприз от магазина", value: "Сюрприз от магазина" }
-        ];
-        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#43e97b', '#f441a5'];
-        let angle = 0;
+        const spinBtn = document.getElementById('spin');
+        const pointer = document.getElementById('pointer');
+        const size = wheel.width;
+        const radius = size / 2;
+        let angle = 0; // текущий угол
         let spinning = false;
-        let targetAngle = 0;
-        let animationFrame;
 
-        function drawWheel() {
-            const centerX = wheel.width / 2;
-            const centerY = wheel.height / 2;
-            const radius = wheel.width / 2 - 28;
-            const segAngle = 2 * Math.PI / segments.length;
-
-            ctx.clearRect(0, 0, wheel.width, wheel.height);
-
-            // Draw shadow
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(centerX, centerY + 18, radius, 0, 2 * Math.PI);
-            ctx.shadowColor = '#8888ff';
-            ctx.shadowBlur = 28;
-            ctx.fillStyle = '#e0e7ff';
-            ctx.fill();
-            ctx.restore();
-
-            for (let i = 0; i < segments.length; i++) {
+        // Функция отрисовки колеса
+        function drawWheel(rotAngle = 0) {
+            ctx.clearRect(0, 0, size, size);
+            const arc = 2 * Math.PI / sectors.length;
+            for (let i = 0; i < sectors.length; i++) {
+                // Сектор с радиальным градиентом
                 ctx.save();
                 ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius, angle + i * segAngle, angle + (i + 1) * segAngle);
+                ctx.moveTo(radius, radius);
+                ctx.arc(radius, radius, radius - 10, arc * i + rotAngle, arc * (i + 1) + rotAngle);
                 ctx.closePath();
-                // Gradient for segment
-                let grad = ctx.createLinearGradient(centerX, centerY, centerX + Math.cos(angle + (i + 0.5) * segAngle) * radius, centerY + Math.sin(angle + (i + 0.5) * segAngle) * radius);
+                // Градиент: от цвета сектора к белому только у края
+                let grad = ctx.createRadialGradient(
+                    radius, radius, radius * 0.2, // центр, маленький радиус
+                    radius, radius, radius - 10    // центр, внешний радиус
+                );
                 grad.addColorStop(0, colors[i % colors.length]);
-                grad.addColorStop(1, '#fff');
+                grad.addColorStop(0.85, colors[i % colors.length]); // основной цвет до 85%
+                grad.addColorStop(1, '#fff'); // белый только у самого края
                 ctx.fillStyle = grad;
                 ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 6;
-                ctx.stroke();
-                // Text
-                ctx.translate(centerX, centerY);
-                ctx.rotate(angle + (i + 0.5) * segAngle);
+                ctx.restore();
+                // Текст
+                ctx.save();
+                ctx.translate(radius, radius);
+                ctx.rotate(arc * i + arc / 2 + rotAngle);
                 ctx.textAlign = "right";
-                ctx.fillStyle = "#333";
-                let text = segments[i].text;
-                let textRadius = radius - 36;
-                let baseFontSize = 20;
-                let fontSize = baseFontSize;
-                // --- Обработка ручного переноса ---
-                let lines = text.split('\n');
+                ctx.font = "bold 14px sans-serif";
+                ctx.fillStyle = "#fff";
+                ctx.shadowColor = "#222";
+                ctx.shadowBlur = 2;
+                let text = sectors[i];
+                let maxWidth = radius - 60;
+                let fontSize = 14;
+                let lines = [];
                 function wrapText(text, maxWidth, fontSize) {
-                    ctx.font = `bold ${fontSize}px Arial`;
+                    ctx.font = `bold ${fontSize}px sans-serif`;
                     let words = text.split(' ');
                     let line = '';
                     let result = [];
@@ -142,84 +145,92 @@
                     if (line) result.push(line);
                     return result;
                 }
-                if (lines.length === 1 && text.length > 13) {
-                    let idx = text.lastIndexOf(' ', Math.floor(text.length/2));
-                    if (idx > 0) {
-                        lines = [text.slice(0, idx), text.slice(idx+1)];
-                    }
-                }
-                if (lines.length === 1) {
-                    lines = wrapText(text, radius * 0.9, fontSize);
-                }
-                if (lines.length > 2) {
-                    fontSize = 14;
-                    lines = wrapText(text, radius * 0.9, fontSize);
-                }
+                lines = wrapText(text, maxWidth, fontSize);
                 if (lines.length > 3) {
                     lines = lines.slice(0, 3);
                     lines[2] = lines[2].replace(/(.{3,})$/, '$1...');
                 }
-                ctx.font = `bold ${fontSize}px Arial`;
-                ctx.shadowColor = '#fff';
-                ctx.shadowBlur = 4;
-                let y = 12 - (lines.length-1)*fontSize/2;
+                ctx.font = `bold ${fontSize}px sans-serif`;
+                let y = 10 - (lines.length - 1) * fontSize / 2;
                 for (let l of lines) {
-                    ctx.fillText(l, textRadius, y);
+                    ctx.fillText(l, radius - 30, y);
                     y += fontSize;
                 }
                 ctx.restore();
             }
-            // Draw center circle
+            // Центр круга
             ctx.save();
             ctx.beginPath();
-            ctx.arc(centerX, centerY, 20, 0, 2 * Math.PI);
+            ctx.arc(radius, radius, 50, 0, 2 * Math.PI);
             ctx.fillStyle = '#fff';
-            ctx.shadowColor = '#aaa';
-            ctx.shadowBlur = 10;
             ctx.fill();
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#36a2eb';
+            ctx.stroke();
             ctx.restore();
         }
 
+        drawWheel();
+
+        // Псевдорандом: переброс для редких призов
+        function getFairRandomIndex() {
+            while (true) {
+                let idx = Math.floor(Math.random() * sectors.length);
+                // 9 и 10 приз (индексы 8 и 9) перебрасываем с вероятностью 90%
+                if ((idx === 8 || idx === 9) && Math.random() < 0.95) continue;
+                return idx;
+            }
+        }
+
+        // Анимация вращения
         function spinWheel() {
             if (spinning) return;
             spinning = true;
-            const prizeIdx = Math.floor(Math.random() * segments.length);
-            const segAngle = 2 * Math.PI / segments.length;
-            const spins = 5 + Math.random() * 1;
-            targetAngle = (2 * Math.PI * spins) - (prizeIdx * segAngle + segAngle / 2);
-            const duration = 3500;
-            const start = performance.now();
-            const startAngle = angle;
+            spinBtn.disabled = true;
+            let duration = 4000 + Math.random() * 1000;
+            let start = null;
+            let selectedIdx = getFairRandomIndex();
+            const arc = 2 * Math.PI / sectors.length;
+            // Рассчитываем угол, чтобы выбранный сектор оказался под стрелкой (на 6 часах, PI/2), С УЧЁТОМ ЦЕНТРА СЕКТОРА
+            let targetAngle = (2 * Math.PI * 5) + (2 * Math.PI - (selectedIdx * arc + arc / 2) + Math.PI / 2);
+            let initialAngle = angle;
 
-            function animate(now) {
-                const elapsed = now - start;
-                const t = Math.min(elapsed / duration, 1);
-                const ease = 1 - Math.pow(1 - t, 3);
-                angle = startAngle + (targetAngle - startAngle) * ease;
-                drawWheel();
-                if (t < 1) {
-                    animationFrame = requestAnimationFrame(animate);
+            function animate(ts) {
+                if (!start) start = ts;
+                let elapsed = ts - start;
+                let progress = Math.min(elapsed / duration, 1);
+                // easeOutCubic
+                let ease = 1 - Math.pow(1 - progress, 3);
+                angle = initialAngle + (targetAngle - initialAngle) * ease;
+                drawWheel(angle);
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
                 } else {
+                    angle = (initialAngle + (targetAngle - initialAngle)) % (2 * Math.PI);
+                    drawWheel(angle);
                     spinning = false;
-                    angle = angle % (2 * Math.PI);
-                    drawWheel();
-                    setTimeout(() => {
-                        const prize = segments[prizeIdx].value;
-                        alert('Ваш приз: ' + prize);
-                        // Отправка данных в Telegram WebApp
-                        if (window.Telegram && window.Telegram.WebApp) {
-                            Telegram.WebApp.sendData(JSON.stringify({ prize: prize }));
-                        } else {
-                            alert('Мини-приложение должно быть открыто через Telegram!');
-                        }
-                    }, 400);
+                    spinBtn.disabled = false;
+                    showResult();
                 }
             }
-            animationFrame = requestAnimationFrame(animate);
+            requestAnimationFrame(animate);
         }
 
-        drawWheel();
-        document.getElementById('spin').onclick = spinWheel;
+        // Определить сектор, на который попали
+        function showResult() {
+            const arc = 2 * Math.PI / sectors.length;
+            let normalized = (2 * Math.PI - (angle - Math.PI / 2)) % (2 * Math.PI);
+            let idx = Math.floor(normalized / arc) % sectors.length;
+            setTimeout(() => {
+                alert('Выпал сектор: ' + sectors[idx]);
+                // Telegram Mini App integration
+                if (window.Telegram && Telegram.WebApp && Telegram.WebApp.sendData) {
+                    Telegram.WebApp.sendData(JSON.stringify({ prize: sectors[idx] }));
+                }
+            }, 400);
+        }
+
+        spinBtn.addEventListener('click', spinWheel);
     </script>
 </body>
 </html>
