@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>Колесо фортуны</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
     <style>
         body {
             display: flex;
@@ -12,7 +13,7 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background: linear-gradient(135deg, #f5f5fa 60%, #e0e7ff 100%);
+            background: radial-gradient(circle at 60% 40%, #f8fbff 60%, #e0e7ff 100%);
             margin: 0;
         }
         .container {
@@ -22,9 +23,9 @@
         #wheel {
             width: min(90vw, 400px);
             height: min(90vw, 400px);
-            box-shadow: 0 6px 32px 0 rgba(60,60,120,0.18), 0 1.5px 8px 0 rgba(0,0,0,0.10);
+            box-shadow: 0 8px 36px 0 rgba(60,60,120,0.18), 0 2px 12px 0 rgba(0,0,0,0.10);
             border-radius: 50%;
-            background: radial-gradient(circle at 60% 40%, #fff 60%, #e0e7ff 100%);
+            background: transparent;
         }
         #pointer {
             position: absolute;
@@ -42,8 +43,9 @@
             margin-top: 10px;
             padding: 22px 60px;
             font-size: 24px;
+            font-family: 'Montserrat', Arial, sans-serif;
             font-weight: bold;
-            background: linear-gradient(90deg, #36a2eb 0%, #32b67a 100%);
+            background: linear-gradient(90deg, #5B8DEE 0%, #39C2C9 100%);
             color: #fff;
             border: none;
             border-radius: 16px;
@@ -52,14 +54,14 @@
             transition: background 0.3s, transform 0.2s;
         }
         #spin:hover {
-            background: linear-gradient(90deg, #32b67a 0%, #36a2eb 100%);
+            background: linear-gradient(90deg, #39C2C9 0%, #5B8DEE 100%);
             transform: scale(1.06);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <canvas id="wheel" width="500" height="500"></canvas>
+        <canvas id="wheel" width="400" height="400"></canvas>
         <!-- SVG pointer -->
         <svg id="pointer" viewBox="0 0 85 85">
             <polygon points="42.5,0 75,65 42.5,53 10,65" fill="#ff595e" stroke="#fff" stroke-width="5"/>
@@ -82,46 +84,67 @@
             "Подарочный бокс всей палитры Modern Gel"
         ];
         const colors = [
-            '#A7C7E7', // soft blue
-            '#B5EAD7', // soft green
-            '#FFDAC1', // soft peach
-            '#E2F0CB', // soft mint
-            '#FFF1BA', // soft yellow
-            '#D4A5A5', // soft pink
-            '#C7CEEA', // soft lilac
-            '#F3B0C3', // soft rose
-            '#B5B9FF', // soft purple
-            '#C2F0FC'  // soft aqua
+            '#5B8DEE', // синий
+            '#39C2C9', // бирюзовый
+            '#FEC163', // золотой
+            '#FF6F91', // коралловый
+            '#A66DD4', // фиолетовый
+            '#F9F871', // лимонный
+            '#6DDCCF', // мятный
+            '#FFD6E0', // розовый
+            '#B1B2FF', // лавандовый
+            '#F4B393'  // персиковый
         ];
         const wheel = document.getElementById('wheel');
         const ctx = wheel.getContext('2d');
         const spinBtn = document.getElementById('spin');
         const pointer = document.getElementById('pointer');
+        const size = wheel.width;
+        const radius = size / 2;
         let angle = 0; // текущий угол
         let spinning = false;
 
         // Функция отрисовки колеса
         function drawWheel(rotAngle = 0) {
-            const size = wheel.width = wheel.offsetWidth; // canvas size = css size
+            const wheel = document.getElementById('wheel');
+            const size = wheel.width = wheel.offsetWidth;
             const radius = size / 2;
             ctx.clearRect(0, 0, size, size);
             const arc = 2 * Math.PI / sectors.length;
             for (let i = 0; i < sectors.length; i++) {
-                // Сектор с радиальным градиентом
+                // Градиентный сектор
                 ctx.save();
                 ctx.beginPath();
                 ctx.moveTo(radius, radius);
                 ctx.arc(radius, radius, radius - 10, arc * i + rotAngle, arc * (i + 1) + rotAngle);
                 ctx.closePath();
-                // Градиент: от цвета сектора к белому только у края
-                let grad = ctx.createRadialGradient(
-                    radius, radius, radius * 0.2,
-                    radius, radius, radius - 10
+                // Линейный градиент по сектору
+                let angleMiddle = arc * i + arc / 2 + rotAngle;
+                let grad = ctx.createLinearGradient(
+                    radius, radius,
+                    radius + Math.cos(angleMiddle) * (radius - 10),
+                    radius + Math.sin(angleMiddle) * (radius - 10)
                 );
                 grad.addColorStop(0, colors[i % colors.length]);
-                grad.addColorStop(0.85, colors[i % colors.length]);
                 grad.addColorStop(1, '#fff');
                 ctx.fillStyle = grad;
+                ctx.shadowColor = 'rgba(91,141,238,0.12)';
+                ctx.shadowBlur = 16;
+                ctx.fill();
+                // Контур сектора
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#fff';
+                ctx.shadowBlur = 0;
+                ctx.stroke();
+                ctx.restore();
+                // Блик (полупрозрачная дуга)
+                ctx.save();
+                ctx.globalAlpha = 0.16;
+                ctx.beginPath();
+                ctx.moveTo(radius, radius);
+                ctx.arc(radius, radius, radius - 18, arc * i + rotAngle + 0.18, arc * (i + 1) + rotAngle - 0.18);
+                ctx.closePath();
+                ctx.fillStyle = '#fff';
                 ctx.fill();
                 ctx.restore();
                 // Текст
@@ -129,16 +152,16 @@
                 ctx.translate(radius, radius);
                 ctx.rotate(arc * i + arc / 2 + rotAngle);
                 ctx.textAlign = "right";
-                ctx.font = `bold ${Math.max(12, Math.floor(size/36))}px sans-serif`;
-                ctx.fillStyle = "#fff";
-                ctx.shadowColor = "#222";
-                ctx.shadowBlur = 2;
+                ctx.font = `bold ${Math.max(13, Math.floor(size/34))}px 'Montserrat', Arial, sans-serif`;
+                ctx.fillStyle = "#555";
+                ctx.shadowColor = "#444";
+                ctx.shadowBlur = 8;
                 let text = sectors[i];
                 let maxWidth = radius - 60;
-                let fontSize = Math.max(12, Math.floor(size/36));
+                let fontSize = Math.max(13, Math.floor(size/34));
                 let lines = [];
                 function wrapText(text, maxWidth, fontSize) {
-                    ctx.font = `bold ${fontSize}px sans-serif`;
+                    ctx.font = `bold ${fontSize}px 'Montserrat', Arial, sans-serif`;
                     let words = text.split(' ');
                     let line = '';
                     let result = [];
@@ -160,7 +183,7 @@
                     lines = lines.slice(0, 3);
                     lines[2] = lines[2].replace(/(.{3,})$/, '$1...');
                 }
-                ctx.font = `bold ${fontSize}px sans-serif`;
+                ctx.font = `bold ${fontSize}px 'Montserrat', Arial, sans-serif`;
                 let y = 10 - (lines.length - 1) * fontSize / 2;
                 for (let l of lines) {
                     ctx.fillText(l, radius - 30, y);
@@ -168,14 +191,26 @@
                 }
                 ctx.restore();
             }
-            // Центр круга
+            // Центр круга с градиентом и блеском
             ctx.save();
             ctx.beginPath();
             ctx.arc(radius, radius, Math.max(32, size/16), 0, 2 * Math.PI);
-            ctx.fillStyle = '#fff';
+            let centerGrad = ctx.createRadialGradient(radius, radius, 10, radius, radius, Math.max(32, size/16));
+            centerGrad.addColorStop(0, '#fff');
+            centerGrad.addColorStop(1, '#E3ECFF');
+            ctx.fillStyle = centerGrad;
+            ctx.shadowColor = '#5B8DEE44';
+            ctx.shadowBlur = 16;
             ctx.fill();
             ctx.lineWidth = 4;
-            ctx.strokeStyle = '#A7C7E7';
+            ctx.strokeStyle = '#5B8DEE';
+            ctx.stroke();
+            // Блик в центре
+            ctx.globalAlpha = 0.18;
+            ctx.beginPath();
+            ctx.arc(radius, radius-8, Math.max(12, size/32), Math.PI*0.85, Math.PI*2.15);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 7;
             ctx.stroke();
             ctx.restore();
         }
@@ -241,9 +276,6 @@
         }
 
         spinBtn.addEventListener('click', spinWheel);
-
-        // Перерисовывать при изменении размера окна
-        window.addEventListener('resize', () => drawWheel(angle));
     </script>
 </body>
 </html>
