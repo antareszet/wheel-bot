@@ -20,8 +20,8 @@
             margin-bottom: 20px;
         }
         #wheel {
-            width: 500px;
-            height: 500px;
+            width: min(90vw, 400px);
+            height: min(90vw, 400px);
             box-shadow: 0 6px 32px 0 rgba(60,60,120,0.18), 0 1.5px 8px 0 rgba(0,0,0,0.10);
             border-radius: 50%;
             background: radial-gradient(circle at 60% 40%, #fff 60%, #e0e7ff 100%);
@@ -31,9 +31,11 @@
             top: auto;
             bottom: -30px;
             left: 50%;
-            transform: translateX(-50%) rotate(0deg); /* Стрелка теперь внизу и указывает вверх */
-            width: 85px;
-            height: 85px;
+            transform: translateX(-50%) rotate(0deg);
+            width: 15vw;
+            max-width: 85px;
+            height: 15vw;
+            max-height: 85px;
             z-index: 2;
         }
         #spin {
@@ -80,20 +82,28 @@
             "Подарочный бокс всей палитры Modern Gel"
         ];
         const colors = [
-            '#36a2eb', '#32b67a', '#ff595e', '#ffca3a', '#8ac926',
-            '#1982c4', '#6a4c93', '#ff924c', '#b388ff', '#00bfae'
+            '#A7C7E7', // soft blue
+            '#B5EAD7', // soft green
+            '#FFDAC1', // soft peach
+            '#E2F0CB', // soft mint
+            '#FFF1BA', // soft yellow
+            '#D4A5A5', // soft pink
+            '#C7CEEA', // soft lilac
+            '#F3B0C3', // soft rose
+            '#B5B9FF', // soft purple
+            '#C2F0FC'  // soft aqua
         ];
         const wheel = document.getElementById('wheel');
         const ctx = wheel.getContext('2d');
         const spinBtn = document.getElementById('spin');
         const pointer = document.getElementById('pointer');
-        const size = wheel.width;
-        const radius = size / 2;
         let angle = 0; // текущий угол
         let spinning = false;
 
         // Функция отрисовки колеса
         function drawWheel(rotAngle = 0) {
+            const size = wheel.width = wheel.offsetWidth; // canvas size = css size
+            const radius = size / 2;
             ctx.clearRect(0, 0, size, size);
             const arc = 2 * Math.PI / sectors.length;
             for (let i = 0; i < sectors.length; i++) {
@@ -105,12 +115,12 @@
                 ctx.closePath();
                 // Градиент: от цвета сектора к белому только у края
                 let grad = ctx.createRadialGradient(
-                    radius, radius, radius * 0.2, // центр, маленький радиус
-                    radius, radius, radius - 10    // центр, внешний радиус
+                    radius, radius, radius * 0.2,
+                    radius, radius, radius - 10
                 );
                 grad.addColorStop(0, colors[i % colors.length]);
-                grad.addColorStop(0.85, colors[i % colors.length]); // основной цвет до 85%
-                grad.addColorStop(1, '#fff'); // белый только у самого края
+                grad.addColorStop(0.85, colors[i % colors.length]);
+                grad.addColorStop(1, '#fff');
                 ctx.fillStyle = grad;
                 ctx.fill();
                 ctx.restore();
@@ -119,13 +129,13 @@
                 ctx.translate(radius, radius);
                 ctx.rotate(arc * i + arc / 2 + rotAngle);
                 ctx.textAlign = "right";
-                ctx.font = "bold 14px sans-serif";
+                ctx.font = `bold ${Math.max(12, Math.floor(size/36))}px sans-serif`;
                 ctx.fillStyle = "#fff";
                 ctx.shadowColor = "#222";
                 ctx.shadowBlur = 2;
                 let text = sectors[i];
                 let maxWidth = radius - 60;
-                let fontSize = 14;
+                let fontSize = Math.max(12, Math.floor(size/36));
                 let lines = [];
                 function wrapText(text, maxWidth, fontSize) {
                     ctx.font = `bold ${fontSize}px sans-serif`;
@@ -161,11 +171,11 @@
             // Центр круга
             ctx.save();
             ctx.beginPath();
-            ctx.arc(radius, radius, 50, 0, 2 * Math.PI);
+            ctx.arc(radius, radius, Math.max(32, size/16), 0, 2 * Math.PI);
             ctx.fillStyle = '#fff';
             ctx.fill();
             ctx.lineWidth = 4;
-            ctx.strokeStyle = '#36a2eb';
+            ctx.strokeStyle = '#A7C7E7';
             ctx.stroke();
             ctx.restore();
         }
@@ -231,6 +241,9 @@
         }
 
         spinBtn.addEventListener('click', spinWheel);
+
+        // Перерисовывать при изменении размера окна
+        window.addEventListener('resize', () => drawWheel(angle));
     </script>
 </body>
 </html>
