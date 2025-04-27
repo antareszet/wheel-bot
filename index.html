@@ -19,13 +19,22 @@
         .container {
             position: relative;
             margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         #wheel {
-            width: min(90vw, 400px);
-            height: min(90vw, 400px);
-            box-shadow: 0 8px 36px 0 rgba(60,60,120,0.18), 0 2px 12px 0 rgba(0,0,0,0.20);
-            border-radius: 50%;
+            width: 90vw;
+            height: 90vw;
+            max-width: 400px;
+            max-height: 400px;
+            aspect-ratio: 1 / 1;
+            display: block;
+            margin: 0 auto;
             background: transparent;
+            border-radius: 50%;
+            box-shadow: 0 8px 36px 0 rgba(60,60,120,0.18), 0 2px 12px 0 rgba(0,0,0,0.20);
         }
         #pointer {
             position: absolute;
@@ -103,15 +112,12 @@
         const ctx = wheel.getContext('2d');
         const spinBtn = document.getElementById('spin');
         const pointer = document.getElementById('pointer');
-        const size = wheel.width;
-        const radius = size / 2;
         let angle = 0; // текущий угол
         let spinning = false;
 
         // Функция отрисовки колеса
         function drawWheel(rotAngle = 0) {
-            const wheel = document.getElementById('wheel');
-            const size = wheel.width = wheel.offsetWidth;
+            const size = wheel.width;
             const radius = size / 2;
             ctx.clearRect(0, 0, size, size);
             const arc = 2 * Math.PI / sectors.length;
@@ -304,6 +310,15 @@
         }
 
         spinBtn.addEventListener('click', spinWheel);
+
+        function resizeWheel() {
+            const wheel = document.getElementById('wheel');
+            const size = Math.min(wheel.offsetWidth, wheel.offsetHeight);
+            wheel.width = wheel.height = size;
+            drawWheel(); // Перерисовать колесо после изменения размера
+        }
+        window.addEventListener('resize', resizeWheel);
+        window.addEventListener('DOMContentLoaded', resizeWheel);
     </script>
 </body>
 </html>
