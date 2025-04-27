@@ -13,7 +13,7 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background: radial-gradient(circle at 60% 40%, #f8fbff 60%, #e0e7ff 100%);
+            background: radial-gradient(circle at 60% 40%, #3d246c 60%, #2d1436 100%);
             margin: 0;
         }
         .container {
@@ -23,7 +23,7 @@
         #wheel {
             width: min(90vw, 400px);
             height: min(90vw, 400px);
-            box-shadow: 0 8px 36px 0 rgba(60,60,120,0.18), 0 2px 12px 0 rgba(0,0,0,0.10);
+            box-shadow: 0 8px 36px 0 rgba(60,60,120,0.18), 0 2px 12px 0 rgba(0,0,0,0.20);
             border-radius: 50%;
             background: transparent;
         }
@@ -45,27 +45,43 @@
             font-size: 24px;
             font-family: 'Montserrat', Arial, sans-serif;
             font-weight: bold;
-            background: linear-gradient(90deg, #5B8DEE 0%, #39C2C9 100%);
+            background: linear-gradient(90deg, #6a3a8c 0%, #3d246c 100%);
             color: #fff;
             border: none;
             border-radius: 16px;
-            box-shadow: 0 2px 12px 0 rgba(60,60,120,0.10);
+            box-shadow: 0 2px 12px 0 rgba(60,60,120,0.16);
             cursor: pointer;
             transition: background 0.3s, transform 0.2s;
         }
         #spin:hover {
-            background: linear-gradient(90deg, #39C2C9 0%, #5B8DEE 100%);
+            background: linear-gradient(90deg, #3d246c 0%, #6a3a8c 100%);
             transform: scale(1.06);
+        }
+        .logo-grape {
+            width: 220px;
+            margin-bottom: 18px;
+            margin-top: 8px;
+            display: flex;
+            justify-content: center;
+            filter: drop-shadow(0 2px 8px rgba(80,60,120,0.22));
         }
     </style>
 </head>
 <body>
+    <div class="logo-grape">
+        <svg width="220" height="110" viewBox="0 0 220 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <text x="0" y="35" font-family="Montserrat, Arial, sans-serif" font-size="38" font-weight="700" fill="white">GRA</text>
+            <rect x="0" y="45" width="38" height="38" fill="white"/>
+            <text x="44" y="76" font-family="Montserrat, Arial, sans-serif" font-size="38" font-weight="700" fill="white">PE</text>
+            <text x="0" y="104" font-family="Montserrat, Arial, sans-serif" font-size="20" letter-spacing="3" font-weight="700" fill="white">PROFESSIONAL</text>
+        </svg>
+    </div>
     <div class="container">
         <canvas id="wheel" width="400" height="400"></canvas>
         <!-- SVG pointer -->
         <svg id="pointer" viewBox="0 0 85 85">
-            <polygon points="42.5,0 75,65 42.5,53 10,65" fill="#ff595e" stroke="#fff" stroke-width="5"/>
-            <circle cx="42.5" cy="72" r="10" fill="#fff" stroke="#ff595e" stroke-width="5"/>
+            <polygon points="42.5,0 75,65 42.5,53 10,65" fill="#e3d8fd" stroke="#6a3a8c" stroke-width="5"/>
+            <circle cx="42.5" cy="72" r="10" fill="#fff" stroke="#a084ca" stroke-width="5"/>
         </svg>
     </div>
     <button id="spin">КРУТИТЬ КОЛЕСО</button>
@@ -81,19 +97,7 @@
             "Бонусы 300",
             "Скидка на год 10%",
             "Подарочный бокс 10000 рублей",
-            "Подарочный бокс всей палитры Modern Gel"
-        ];
-        const colors = [
-            '#5B8DEE', // синий
-            '#39C2C9', // бирюзовый
-            '#FEC163', // золотой
-            '#FF6F91', // коралловый
-            '#A66DD4', // фиолетовый
-            '#F9F871', // лимонный
-            '#6DDCCF', // мятный
-            '#FFD6E0', // розовый
-            '#B1B2FF', // лавандовый
-            '#F4B393'  // персиковый
+            "Подарочный бокс палитры Modern Gel"
         ];
         const wheel = document.getElementById('wheel');
         const ctx = wheel.getContext('2d');
@@ -111,35 +115,44 @@
             const radius = size / 2;
             ctx.clearRect(0, 0, size, size);
             const arc = 2 * Math.PI / sectors.length;
+            // Новый стиль: единый градиент для всех секторов
+            const sectorGradient = ctx.createRadialGradient(
+                radius, radius, radius * 0.4,
+                radius, radius, radius - 10
+            );
+            sectorGradient.addColorStop(0, '#3d246c'); // глубокий фирменный фиолетовый
+            sectorGradient.addColorStop(0.7, '#a084ca'); // светло-фиолетовый
+            sectorGradient.addColorStop(1, '#d1d5db'); // серебристо-серый
             for (let i = 0; i < sectors.length; i++) {
-                // Градиентный сектор
                 ctx.save();
                 ctx.beginPath();
                 ctx.moveTo(radius, radius);
                 ctx.arc(radius, radius, radius - 10, arc * i + rotAngle, arc * (i + 1) + rotAngle);
                 ctx.closePath();
-                // Линейный градиент по сектору
-                let angleMiddle = arc * i + arc / 2 + rotAngle;
-                let grad = ctx.createLinearGradient(
-                    radius, radius,
-                    radius + Math.cos(angleMiddle) * (radius - 10),
-                    radius + Math.sin(angleMiddle) * (radius - 10)
-                );
-                grad.addColorStop(0, colors[i % colors.length]);
-                grad.addColorStop(1, '#fff');
-                ctx.fillStyle = grad;
-                ctx.shadowColor = 'rgba(91,141,238,0.12)';
-                ctx.shadowBlur = 16;
+                ctx.fillStyle = sectorGradient;
+                ctx.shadowColor = 'rgba(160,132,202,0.08)';
+                ctx.shadowBlur = 10;
                 ctx.fill();
-                // Контур сектора
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = '#fff';
+                // Более заметный двойной разделитель между секторами
+                ctx.save();
+                ctx.lineWidth = 7;
+                ctx.strokeStyle = '#3d246c'; // тёмно-фиолетовый основной разделитель
+                ctx.shadowColor = '#fff';
+                ctx.shadowBlur = 6;
+                ctx.beginPath();
+                ctx.arc(radius, radius, radius - 10, arc * i + rotAngle, arc * (i + 1) + rotAngle);
+                ctx.stroke();
+                ctx.lineWidth = 2.2;
+                ctx.strokeStyle = '#fff'; // тонкая белая линия поверх
                 ctx.shadowBlur = 0;
+                ctx.beginPath();
+                ctx.arc(radius, radius, radius - 10, arc * i + rotAngle, arc * (i + 1) + rotAngle);
                 ctx.stroke();
                 ctx.restore();
-                // Блик (полупрозрачная дуга)
+                ctx.restore();
+                // Лёгкий внутренний блик
                 ctx.save();
-                ctx.globalAlpha = 0.16;
+                ctx.globalAlpha = 0.10;
                 ctx.beginPath();
                 ctx.moveTo(radius, radius);
                 ctx.arc(radius, radius, radius - 18, arc * i + rotAngle + 0.18, arc * (i + 1) + rotAngle - 0.18);
@@ -147,18 +160,20 @@
                 ctx.fillStyle = '#fff';
                 ctx.fill();
                 ctx.restore();
-                // Текст
+                // Текст: белый с тёмно-фиолетовой обводкой, без подложки даже для длинных призов
                 ctx.save();
                 ctx.translate(radius, radius);
                 ctx.rotate(arc * i + arc / 2 + rotAngle);
                 ctx.textAlign = "right";
-                ctx.font = `bold ${Math.max(13, Math.floor(size/34))}px 'Montserrat', Arial, sans-serif`;
-                ctx.fillStyle = "#555";
-                ctx.shadowColor = "#444";
-                ctx.shadowBlur = 8;
+                ctx.font = `bold ${Math.max(12, Math.floor(size/38))}px 'Montserrat', Arial, sans-serif`;
+                ctx.lineWidth = 2.2;
+                ctx.strokeStyle = '#3d246c';
+                ctx.fillStyle = '#fff';
+                ctx.shadowColor = 'rgba(0,0,0,0.10)';
+                ctx.shadowBlur = 2;
                 let text = sectors[i];
                 let maxWidth = radius - 60;
-                let fontSize = Math.max(13, Math.floor(size/34));
+                let fontSize = Math.max(12, Math.floor(size/38));
                 let lines = [];
                 function wrapText(text, maxWidth, fontSize) {
                     ctx.font = `bold ${fontSize}px 'Montserrat', Arial, sans-serif`;
@@ -179,13 +194,25 @@
                     return result;
                 }
                 lines = wrapText(text, maxWidth, fontSize);
+                // Автоматическое уменьшение шрифта и аккуратная подложка под каждую строку для длинных призов
+                let isLongPrize = text.includes('палитры Modern Gel');
+                if (isLongPrize && lines.length > 2) {
+                    fontSize = Math.max(10, Math.floor(size/48));
+                    lines = wrapText(text, maxWidth, fontSize);
+                }
                 if (lines.length > 3) {
                     lines = lines.slice(0, 3);
                     lines[2] = lines[2].replace(/(.{3,})$/, '$1...');
                 }
-                ctx.font = `bold ${fontSize}px 'Montserrat', Arial, sans-serif`;
                 let y = 10 - (lines.length - 1) * fontSize / 2;
                 for (let l of lines) {
+                    ctx.font = `bold ${fontSize}px 'Montserrat', Arial, sans-serif`;
+                    ctx.lineWidth = 2.2;
+                    ctx.strokeStyle = '#3d246c';
+                    ctx.fillStyle = '#fff';
+                    ctx.shadowColor = 'rgba(0,0,0,0.10)';
+                    ctx.shadowBlur = 2;
+                    ctx.strokeText(l, radius - 30, y);
                     ctx.fillText(l, radius - 30, y);
                     y += fontSize;
                 }
@@ -195,22 +222,23 @@
             ctx.save();
             ctx.beginPath();
             ctx.arc(radius, radius, Math.max(32, size/16), 0, 2 * Math.PI);
-            let centerGrad = ctx.createRadialGradient(radius, radius, 10, radius, radius, Math.max(32, size/16));
-            centerGrad.addColorStop(0, '#fff');
-            centerGrad.addColorStop(1, '#E3ECFF');
+            let centerGrad = ctx.createRadialGradient(radius, radius, radius*0.02, radius, radius, radius*0.5);
+            centerGrad.addColorStop(0, '#f3e8ff');
+            centerGrad.addColorStop(0.4, '#a084ca');
+            centerGrad.addColorStop(1, '#3d246c');
             ctx.fillStyle = centerGrad;
-            ctx.shadowColor = '#5B8DEE44';
-            ctx.shadowBlur = 16;
+            ctx.shadowColor = '#a084ca88';
+            ctx.shadowBlur = 18;
             ctx.fill();
             ctx.lineWidth = 4;
-            ctx.strokeStyle = '#5B8DEE';
+            ctx.strokeStyle = '#6a3a8c';
             ctx.stroke();
-            // Блик в центре
-            ctx.globalAlpha = 0.18;
+            // Блик в центре (имитация лака)
+            ctx.globalAlpha = 0.22;
             ctx.beginPath();
-            ctx.arc(radius, radius-8, Math.max(12, size/32), Math.PI*0.85, Math.PI*2.15);
+            ctx.arc(radius, radius-10, Math.max(16, size/28), Math.PI*0.85, Math.PI*2.15);
             ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 7;
+            ctx.lineWidth = 8;
             ctx.stroke();
             ctx.restore();
         }
