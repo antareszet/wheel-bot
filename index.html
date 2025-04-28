@@ -3,6 +3,7 @@
 <head>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Колесо фортуны</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
@@ -312,10 +313,12 @@
         spinBtn.addEventListener('click', spinWheel);
 
         function resizeWheel() {
-            const wheel = document.getElementById('wheel');
-            const size = Math.min(wheel.offsetWidth, wheel.offsetHeight);
+            // Устанавливаем размер canvas в зависимости от меньшей стороны экрана
+            const minDim = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+            const size = Math.min(400, minDim);
+            wheel.style.width = wheel.style.height = size + 'px';
             wheel.width = wheel.height = size;
-            drawWheel(); // Перерисовать колесо после изменения размера
+            drawWheel(angle);
         }
         window.addEventListener('resize', resizeWheel);
         window.addEventListener('DOMContentLoaded', resizeWheel);
