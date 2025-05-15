@@ -261,7 +261,7 @@
             while (true) {
                 let idx = Math.floor(Math.random() * sectors.length);
                 // 9 и 10 приз (индексы 8 и 9) перебрасываем с вероятностью 80%
-                if ((idx === 8 || idx === 9) && Math.random() < 0.1) continue;
+                if ((idx === 8 || idx === 9) && Math.random() < 0.85) continue;
                 return idx;
             }
         }
